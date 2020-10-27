@@ -3,6 +3,18 @@ package com.naofi.compiler.binding.symbols;
 import java.util.Arrays;
 
 public enum VariableType {
+    ANY("") {
+      @Override
+      public boolean fits(long value) {
+          return false;
+      }
+    },
+    BOOL("Z") {
+      @Override
+      public boolean fits(long value) {
+          return false;
+      }
+    },
     BYTE("B") {
         @Override
         public boolean fits(long value) {
@@ -78,6 +90,12 @@ public enum VariableType {
     }
 
     public boolean isAssignableFrom(VariableType other) {
+        if (this == VariableType.BOOL && other == VariableType.BOOL) {
+            return true;
+        }
+        if (this == VariableType.BOOL || other == VariableType.BOOL) {
+            return false;
+        }
         return ordinal() >= other.ordinal();
     }
 

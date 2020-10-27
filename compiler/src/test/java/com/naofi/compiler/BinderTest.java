@@ -45,9 +45,6 @@ public class BinderTest {
         );
     }
 
-    /**
-     * By default literal is of type int
-     */
     @Test
     public void varDef1() {
         testMethodBinding(
@@ -150,6 +147,84 @@ public class BinderTest {
                         "}",
                 VariableType.UNDEFINED,
                 "Variable 'a' may be not initialized"
+        );
+    }
+
+    @Test
+    public void assignBoolToInt() {
+        testMethodBinding(
+                "main () {" +
+                        "bool a = false;" +
+                        "int b = a;" +
+                        "int c = false;" +
+                        "}",
+                VariableType.UNDEFINED,
+                "Cannot assign type BOOL to variable of type INT",
+                "Cannot assign type BOOL to variable of type INT"
+        );
+    }
+
+    @Test
+    public void assignIntToBool() {
+        testMethodBinding(
+                "main () {" +
+                        "int a = 0;" +
+                        "bool b = a;" +
+                        "bool c = 1;" +
+                        "}",
+                VariableType.UNDEFINED,
+                "Cannot assign type INT to variable of type BOOL",
+                "Cannot assign type BYTE to variable of type BOOL"
+        );
+    }
+
+    @Test
+    public void returnEqByte() {
+        testMethodBinding(
+                "main () {" +
+                        "var a = 0;" +
+                        "var b = a;" +
+                        "return a == b;" +
+                        "}",
+                VariableType.BOOL
+        );
+    }
+
+    @Test
+    public void returnNotEqByte() {
+        testMethodBinding(
+                "main () {" +
+                        "var a = 0;" +
+                        "var b = a;" +
+                        "return a != b;" +
+                        "}",
+                VariableType.BOOL
+        );
+    }
+
+    @Test
+    public void returnCompByte() {
+        testMethodBinding(
+                "main () {" +
+                        "var a = 0;" +
+                        "var b = a;" +
+                        "return a >= b;" +
+                        "}",
+                VariableType.BOOL
+        );
+    }
+
+    @Test
+    public void ifScope() {
+        testMethodBinding(
+                "main () {" +
+                        "if (true) {" +
+                        "var a = false;" +
+                        "}" +
+                        "return a;" +
+                        "}",
+                VariableType.UNDEFINED,
+                "Variable 'a' is not defined in scope"
         );
     }
 

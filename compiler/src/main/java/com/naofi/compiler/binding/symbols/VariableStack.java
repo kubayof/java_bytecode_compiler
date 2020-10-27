@@ -8,11 +8,11 @@ public class VariableStack {
     private final Deque<Map<String, Variable>> stack = new ArrayDeque<>();
 
     public void pushScope() {
-        stack.offer(new WeakHashMap<>());
+        stack.push(new HashMap<>());
     }
 
     public void popScope() {
-        stack.poll();
+        stack.pop();
     }
 
     public Variable defineNewVar(NfLangParser.VariableContext context, VariableType type) {
@@ -45,6 +45,7 @@ public class VariableStack {
     public Variable findVar(String name) {
         return stack.stream()
                 .map(scope -> scope.get(name))
+                .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
     }

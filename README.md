@@ -13,3 +13,5 @@ class Main {
   }
 }
 ```
+
+For more examples check [compiler tests](compiler/src/test/java/com/naofi/compiler/CompilerTest.java).

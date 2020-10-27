@@ -63,9 +63,45 @@ public class Binder extends NfLangBaseVisitor<VariableType> {
     }
 
     @Override
+    public VariableType visitIfElseStmt(NfLangParser.IfElseStmtContext ctx) {
+        visitBoolExpression(ctx.boolExpression());
+        visitBlock(ctx.block());
+        visit(ctx.elseInner());
+
+        return VariableType.UNDEFINED;
+    }
+
+
+
+    @Override
+    public VariableType visitIfStmt(NfLangParser.IfStmtContext ctx) {
+        visitBoolExpression(ctx.boolExpression());
+        visitBlock(ctx.block());
+
+        return VariableType.UNDEFINED;
+    }
+
+    @Override
+    public VariableType visitWhileStmt(NfLangParser.WhileStmtContext ctx) {
+        visitBoolExpression(ctx.boolExpression());
+        visitBlock(ctx.block());
+
+        return VariableType.UNDEFINED;
+    }
+
+    @Override
+    public VariableType visitBlock(NfLangParser.BlockContext ctx) {
+        stack.pushScope();
+        super.visitBlock(ctx);
+        stack.popScope();
+
+        return VariableType.UNDEFINED;
+    }
+
+    @Override
     public VariableType visitReturn(NfLangParser.ReturnContext ctx) {
-        List<NfLangParser.ExpressionContext> expressions = ctx.expression();
-        List<VariableType> types = expressions.stream()
+        List<NfLangParser.ExprContext> exprs = ctx.expr();
+        List<VariableType> types = exprs.stream()
                 .map(this::visit)
                 .collect(Collectors.toList());
 
@@ -87,9 +123,9 @@ public class Binder extends NfLangBaseVisitor<VariableType> {
     public VariableType visitTypeInitDef(NfLangParser.TypeInitDefContext ctx) {
         NfLangParser.TypeContext typeContext = ctx.type();
         NfLangParser.VariableContext variableContext = ctx.variable();
-        NfLangParser.ExpressionContext expressionContext = ctx.expression();
+        NfLangParser.ExprContext exprContext = ctx.expr();
         VariableType variableType = VariableType.of(typeContext.getText());
-        VariableType expressionType = visit(expressionContext);
+        VariableType expressionType = visit(exprContext);
         if (!variableType.isAssignableFrom(expressionType)) {
             errors.add(String.format("Cannot assign type %s to variable of type %s", expressionType, variableType));
         }
@@ -114,8 +150,8 @@ public class Binder extends NfLangBaseVisitor<VariableType> {
     @Override
     public VariableType visitVarInitDef(NfLangParser.VarInitDefContext ctx) {
         NfLangParser.VariableContext variable = ctx.variable();
-        NfLangParser.ExpressionContext expression = ctx.expression();
-        VariableType type = visit(expression);
+        NfLangParser.ExprContext expr = ctx.expr();
+        VariableType type = visit(expr);
         defineNewVar(variable, type);
         stack.findVar(ctx.variable().IDENTIFIER().getText()).setInitialized(true);
 
@@ -123,16 +159,27 @@ public class Binder extends NfLangBaseVisitor<VariableType> {
     }
 
     @Override
-    public VariableType visitAssignment(NfLangParser.AssignmentContext ctx) {
-        NfLangParser.VariableContext variableContext = ctx.variable();
-        NfLangParser.ExpressionContext expression = ctx.expression();
-        VariableType varType = visitVariable(variableContext);
-        VariableType type = visitExpression(expression);
-        if (!varType.isAssignableFrom(type)) {
-            errors.add(String.format("Cannot assign type '%s' to variable of type '%s'", type, varType));
+    public VariableType visitEqExpression(NfLangParser.EqExpressionContext ctx) {
+        super.visitEqExpression(ctx);
+
+        return VariableType.BOOL;
+    }
+
+    @Override
+    public VariableType visitCompExpression(NfLangParser.CompExpressionContext ctx) {
+        if (ctx.bool_term() != null) {
+            boolean value = Boolean.parseBoolean(ctx.getText());
+            TypedBoolLiteral typed = new TypedBoolLiteral(ctx.bool_term(), VariableType.BOOL, value);
+            replace(ctx.bool_term(), typed);
+            return VariableType.BOOL;
+        }
+        VariableType type1 = visitExpression(ctx.expression(0));
+        VariableType type2 = visitExpression(ctx.expression(1));
+        if (!type1.isAssignableFrom(type2)) {
+            errors.add(String.format("Cannot compare types '%s' and '%s'", type1, type2));
         }
 
-        return varType;
+        return VariableType.BOOL;
     }
 
     @Override
@@ -210,11 +257,21 @@ public class Binder extends NfLangBaseVisitor<VariableType> {
 
     @Override
     protected VariableType defaultResult() {
-        return VariableType.BYTE;
+        return VariableType.ANY;
     }
 
     @Override
     protected VariableType aggregateResult(VariableType aggregate, VariableType nextResult) {
-        return (aggregate.ordinal() > nextResult.ordinal()) ? aggregate : nextResult;
+        if (aggregate == VariableType.ANY) {
+            return nextResult;
+        }
+        if (nextResult == VariableType.ANY) {
+            return aggregate;
+        }
+        if (aggregate.isAssignableFrom(nextResult) || nextResult.isAssignableFrom(aggregate)) {
+            return (aggregate.ordinal() > nextResult.ordinal()) ? aggregate : nextResult;
+        }
+        errors.add(String.format("Cannot find common type for '%s' and '%s'", aggregate, nextResult));
+        return VariableType.UNDEFINED;
     }
 }

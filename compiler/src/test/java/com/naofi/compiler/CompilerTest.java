@@ -195,11 +195,250 @@ public class CompilerTest {
                 10);
     }
 
+    @Test
+    public void returnBooleanConstant1() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "return false;" +
+                        "}" +
+                        "}",
+                false);
+    }
+
+    @Test
+    public void returnBooleanConstant2() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "return true;" +
+                        "}" +
+                        "}",
+                true);
+    }
+
+    @Test
+    public void returnBooleanVariable() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "var a = false;" +
+                        "return a;" +
+                        "}" +
+                        "}",
+                false);
+    }
+
+    @Test
+    public void returnLess() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "return 1 < 2;" +
+                        "}" +
+                        "}",
+                true);
+    }
+
+    @Test
+    public void returnLessOrEqual() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "return 2 <= 2;" +
+                        "}" +
+                        "}",
+                true);
+    }
+
+    @Test
+    public void returnGreater() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "return 2 > 1;" +
+                        "}" +
+                        "}",
+                true);
+    }
+
+    @Test
+    public void returnGreaterOrEqual() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "return 2 >= 2;" +
+                        "}" +
+                        "}",
+                true);
+    }
+
+    @Test
+    public void returnEqual1() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "return 2 == 2;" +
+                        "}" +
+                        "}",
+                true);
+    }
+
+    @Test
+    public void returnEqual2() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "return 2 == 3;" +
+                        "}" +
+                        "}",
+                false);
+    }
+
+    @Test
+    public void returnNotEqual1() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "return 2 != 3;" +
+                        "}" +
+                        "}",
+                true);
+    }
+
+    @Test
+    public void returnNotEqual2() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "return 2 != 2;" +
+                        "}" +
+                        "}",
+                false);
+    }
+
+    @Test
+    public void ifStmt1() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "int a = 0;" +
+                        "if (1<2) {" +
+                        "a = 1;" +
+                        "}" +
+                        "return a;" +
+                        "}" +
+                        "}",
+                1);
+    }
+
+    @Test
+    public void ifStmt2() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "int a = 0;" +
+                        "if (1>2) {" +
+                        "a = 1;" +
+                        "}" +
+                        "return a;" +
+                        "}" +
+                        "}",
+                0);
+    }
+
+    @Test
+    public void ifElseStmt1() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "int a = 0;" +
+                        "if (1>2) {" +
+                        "a = 1;" +
+                        "} else {" +
+                        "a = 3;" +
+                        "}" +
+                        "return a;" +
+                        "}" +
+                        "}",
+                3);
+    }
+
+    @Test
+    public void ifElseStmt2() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "int a = 0;" +
+                        "if (1<2) {" +
+                        "a = 1;" +
+                        "} else {" +
+                        "a = 3;" +
+                        "}" +
+                        "return a;" +
+                        "}" +
+                        "}",
+                1);
+    }
+
+    @Test
+    public void ifElseStmt3() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "int a = 1;" +
+                        "if (a > 0) {" +
+                        "a = 10;" +
+                        "} else if (a == 0) {" +
+                        "a = 11;" +
+                        "} else {" +
+                        "a = 12;" +
+                        "}" +
+                        "return a;" +
+                        "}" +
+                        "}",
+                10);
+    }
+
+    @Test
+    public void ifElseStmt4() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "int a = 0;" +
+                        "if (a > 0) {" +
+                        "a = 10;" +
+                        "} else if (a == 0) {" +
+                        "a = 11;" +
+                        "} else {" +
+                        "a = 12;" +
+                        "}" +
+                        "return a;" +
+                        "}" +
+                        "}",
+                11);
+    }
+
+    @Test
+    public void ifElseStmt5() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "int a = -1;" +
+                        "if (a > 0) {" +
+                        "a = 10;" +
+                        "} else if (a == 0) {" +
+                        "a = 11;" +
+                        "} else {" +
+                        "a = 12;" +
+                        "}" +
+                        "return a;" +
+                        "}" +
+                        "}",
+                12);
+    }
+
+    @Test
+    public void whileStmt() {
+        returnValueTest("class Main {" +
+                        "main() {" +
+                        "int a = 0;" +
+                        "while (a < 10) {" +
+                        "a = a + 1;" +
+                        "}" +
+                        "return a;" +
+                        "}" +
+                        "}",
+                10);
+    }
+
     private void returnValueTest(String code, Object expected) {
         try {
             byte[] compiledBytes = NfCompiler.compile(code);
             if (compiledBytes != null) {
-//                Files.write(Paths.get("Main.class"), compiledBytes);
+                Files.write(Paths.get("Main.class"), compiledBytes);
                 Class<?> clazz = new TestClassLoader().defineClass("Main", compiledBytes);
                 Method printMethod = clazz.getDeclaredMethod("main");
                 Object obj = clazz.getConstructor().newInstance();
@@ -209,12 +448,11 @@ public class CompilerTest {
 
 
             } else {
-                Assertions.fail();
+                Assertions.fail("Compiler returned null for some reason");
             }
-        } catch (InstantiationException | InvocationTargetException
-                | NoSuchMethodException | IllegalAccessException e) {
+        } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException | IOException e) {
             e.printStackTrace();
-            Assertions.fail();
+            Assertions.fail("Got eception:" + e.getMessage());
         }
     }
 }

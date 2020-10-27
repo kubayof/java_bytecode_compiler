@@ -3,10 +3,7 @@ package com.naofi.compiler;
 import com.naofi.antlr.NfLangBaseVisitor;
 import com.naofi.antlr.NfLangParser;
 import com.naofi.compiler.binding.symbols.*;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.*;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -105,19 +102,19 @@ public class ComposeBytecodeVisitor extends NfLangBaseVisitor<VariableType> {
 
     @Override
     public VariableType visitTypeInitDef(NfLangParser.TypeInitDefContext ctx) {
-        return initVariable((Variable)ctx.variable(), ctx.expression());
+        return initVariable((Variable)ctx.variable(), ctx.expr());
     }
 
     @Override
     public VariableType visitVarInitDef(NfLangParser.VarInitDefContext ctx) {
-        return initVariable((Variable)ctx.variable(), ctx.expression());
+        return initVariable((Variable)ctx.variable(), ctx.expr());
     }
 
-    private VariableType initVariable(Variable variable, NfLangParser.ExpressionContext expression) {
+    private VariableType initVariable(Variable variable, NfLangParser.ExprContext expr) {
         int varIndex = localsCounter++;
         methodLocalsMap.put(variable, varIndex);
         typeToLoad = variable.getType();
-        visitExpression(expression);
+        visitExpr(expr);
         assignToLocal(variable.getType(), varIndex);
 
         return variable.getType();
@@ -126,12 +123,12 @@ public class ComposeBytecodeVisitor extends NfLangBaseVisitor<VariableType> {
     @Override
     public VariableType visitAssignment(NfLangParser.AssignmentContext ctx) {
         NfLangParser.VariableContext variableContext = ctx.variable();
-        NfLangParser.ExpressionContext expressionContext = ctx.expression();
+        NfLangParser.ExprContext exprContext = ctx.expr();
 
         if (variableContext instanceof Variable) {
             Variable variable = (Variable) variableContext;
             typeToLoad = variable.getType();
-            visitExpression(expressionContext);
+            visitExpr(exprContext);
             int varIndex = methodLocalsMap.get(variable);
             switch (variable.getType()) {
                 case BYTE:
@@ -154,6 +151,7 @@ public class ComposeBytecodeVisitor extends NfLangBaseVisitor<VariableType> {
 
     private void assignToLocal(VariableType type, int varIndex) {
         switch (type) {
+            case BOOL:
             case BYTE:
             case SHORT:
             case INT:
@@ -167,6 +165,72 @@ public class ComposeBytecodeVisitor extends NfLangBaseVisitor<VariableType> {
         }
     }
 
+    private Label endIfLabel = new Label();
+
+    @Override
+    public VariableType visitIfStmt(NfLangParser.IfStmtContext ctx) {
+        NfLangParser.BoolExpressionContext condition = ctx.boolExpression();
+        NfLangParser.BlockContext trueBlock = ctx.block();
+        visitBoolExpression(condition);
+        if (endIfLabel == null) {
+            endIfLabel = new Label();
+        }
+        methodVisitor.visitInsn(Opcodes.ICONST_1);
+        methodVisitor.visitJumpInsn(Opcodes.IF_ICMPNE, endIfLabel);
+        visitBlock(trueBlock);
+        methodVisitor.visitLabel(endIfLabel);
+        endIfLabel = null;
+
+        return VariableType.UNDEFINED;
+    }
+
+    @Override
+    public VariableType visitIfElseStmt(NfLangParser.IfElseStmtContext ctx) {
+        NfLangParser.BoolExpressionContext condition = ctx.boolExpression();
+        NfLangParser.BlockContext trueBlock = ctx.block();
+        NfLangParser.ElseInnerContext elseContext = ctx.elseInner();
+        visitBoolExpression(condition);
+        Label falseLabel = new Label();
+        if (endIfLabel == null) {
+            endIfLabel = new Label();
+        }
+        methodVisitor.visitInsn(Opcodes.ICONST_1);
+        methodVisitor.visitJumpInsn(Opcodes.IF_ICMPNE, falseLabel);
+        visitBlock(trueBlock);
+        methodVisitor.visitJumpInsn(Opcodes.GOTO, endIfLabel);
+        methodVisitor.visitLabel(falseLabel);
+        visit(elseContext);
+
+        return VariableType.UNDEFINED;
+    }
+
+    @Override
+    public VariableType visitElseStmt(NfLangParser.ElseStmtContext ctx) {
+        visit(ctx.block());
+        if (endIfLabel != null) {
+            methodVisitor.visitLabel(endIfLabel);
+            endIfLabel = null;
+        }
+
+        return VariableType.UNDEFINED;
+    }
+
+    @Override
+    public VariableType visitWhileStmt(NfLangParser.WhileStmtContext ctx) {
+        Label whileStart = new Label();
+        Label whileEnd = new Label();
+
+        methodVisitor.visitLabel(whileStart);
+        visitBoolExpression(ctx.boolExpression());
+        methodVisitor.visitInsn(Opcodes.ICONST_1);
+        methodVisitor.visitJumpInsn(Opcodes.IF_ICMPNE, whileEnd);
+        visitBlock(ctx.block());
+        methodVisitor.visitJumpInsn(Opcodes.GOTO, whileStart);
+        methodVisitor.visitLabel(whileEnd);
+
+        return VariableType.UNDEFINED;
+    }
+
     @Override
     public VariableType visitReturn(NfLangParser.ReturnContext ctx) {
         if (ctx instanceof TypedReturnContext) {
@@ -177,6 +241,7 @@ public class ComposeBytecodeVisitor extends NfLangBaseVisitor<VariableType> {
                 methodVisitor.visitInsn(Opcodes.RETURN);
             } else if (returnTypes.size() == 1) {
                 switch (returnTypes.get(0)) {
+                    case BOOL:
                     case BYTE:
                     case SHORT:
                     case INT:
@@ -210,12 +275,76 @@ public class ComposeBytecodeVisitor extends NfLangBaseVisitor<VariableType> {
     private VariableType typeToLoad;
 
     @Override
+    public VariableType visitEqExpression(NfLangParser.EqExpressionContext ctx) {
+        String op = ctx.op4().getText();
+        visitExpression(ctx.expression(0));
+        visitExpression(ctx.expression(1));
+
+        Label trueLabel = new Label();
+        Label endLabel = new Label();
+        switch (op) {
+            case "==":
+                methodVisitor.visitJumpInsn(Opcodes.IF_ICMPEQ, trueLabel);
+                break;
+            case "!=":
+                methodVisitor.visitJumpInsn(Opcodes.IF_ICMPNE, trueLabel);
+                break;
+            default:
+                throw new UnsupportedOperationException("Unsupported operator: " + op);
+        }
+        methodVisitor.visitInsn(Opcodes.ICONST_0);
+        methodVisitor.visitJumpInsn(Opcodes.GOTO, endLabel);
+        methodVisitor.visitLabel(trueLabel);
+        methodVisitor.visitInsn(Opcodes.ICONST_1);
+        methodVisitor.visitLabel(endLabel);
+
+        return VariableType.BOOL;
+    }
+
+    @Override
+    public VariableType visitCompExpression(NfLangParser.CompExpressionContext ctx) {
+        if (ctx.bool_term() != null) {
+            visitBool_term(ctx.bool_term());
+            return VariableType.BOOL;
+        }
+        String op = ctx.op3().getText();
+        visitExpression(ctx.expression(0));
+        visitExpression(ctx.expression(1));
+
+        Label trueLabel = new Label();
+        Label endLabel = new Label();
+        switch (op) {
+            case "<":
+                methodVisitor.visitJumpInsn(Opcodes.IF_ICMPLT, trueLabel);
+                break;
+            case "<=":
+                methodVisitor.visitJumpInsn(Opcodes.IF_ICMPLE, trueLabel);
+                break;
+            case ">":
+                methodVisitor.visitJumpInsn(Opcodes.IF_ICMPGT, trueLabel);
+                break;
+            case ">=":
+                methodVisitor.visitJumpInsn(Opcodes.IF_ICMPGE, trueLabel);
+                break;
+            default:
+                throw new UnsupportedOperationException("Unsupported operator: " + op);
+        }
+        methodVisitor.visitInsn(Opcodes.ICONST_0);
+        methodVisitor.visitJumpInsn(Opcodes.GOTO, endLabel);
+        methodVisitor.visitLabel(trueLabel);
+        methodVisitor.visitInsn(Opcodes.ICONST_1);
+        methodVisitor.visitLabel(endLabel);
+
+        return VariableType.BOOL;
+    }
+
+    @Override
     public VariableType visitExpression(NfLangParser.ExpressionContext ctx) {
         VariableType lastType = visit(ctx.factor(0));
         typeToLoad = ctx.op1().stream()
                 .map(op -> ((TypedOp1Context)op).getType())
                 .reduce(VariableType::max)
-                .orElse(VariableType.UNDEFINED);
+                .orElse(lastType);
         for (int i = 0; i < ctx.op1().size(); i++) {
             visit(ctx.factor(i + 1));
             TypedOp1Context op = (TypedOp1Context) ctx.op1(i);
@@ -327,6 +456,7 @@ public class ComposeBytecodeVisitor extends NfLangBaseVisitor<VariableType> {
             Variable variable = (Variable) ctx;
             int varIndex = methodLocalsMap.get(variable);
             switch (variable.getType()) {
+                case BOOL:
                 case BYTE:
                 case SHORT:
                 case INT:
@@ -346,6 +476,20 @@ public class ComposeBytecodeVisitor extends NfLangBaseVisitor<VariableType> {
         }
 
         throw new IllegalStateException("VariableContext was not replaced at binding step: '" + ctx.getText() + "'");
+    }
+
+    @Override
+    public VariableType visitBool_term(NfLangParser.Bool_termContext ctx) {
+        if (ctx instanceof TypedBoolLiteral) {
+            TypedBoolLiteral typed = (TypedBoolLiteral) ctx;
+            if (typed.getValue()) {
+                methodVisitor.visitInsn(Opcodes.ICONST_1);
+            } else {
+                methodVisitor.visitInsn(Opcodes.ICONST_0);
+            }
+            return VariableType.BOOL;
+        }
+        throw new IllegalStateException("Bool term was not replaced at binding step");
     }
 
     @Override
@@ -401,6 +545,8 @@ public class ComposeBytecodeVisitor extends NfLangBaseVisitor<VariableType> {
             }
             return type;
         }
+
+
 
         throw new IllegalStateException("LiteralContext was not replaced at binding step");
     }
