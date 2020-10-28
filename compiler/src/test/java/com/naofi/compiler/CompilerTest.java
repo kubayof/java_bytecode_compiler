@@ -438,7 +438,7 @@ public class CompilerTest {
         try {
             byte[] compiledBytes = NfCompiler.compile(code);
             if (compiledBytes != null) {
-                Files.write(Paths.get("Main.class"), compiledBytes);
+//                Files.write(Paths.get("Main.class"), compiledBytes);
                 Class<?> clazz = new TestClassLoader().defineClass("Main", compiledBytes);
                 Method printMethod = clazz.getDeclaredMethod("main");
                 Object obj = clazz.getConstructor().newInstance();
@@ -450,7 +450,7 @@ public class CompilerTest {
             } else {
                 Assertions.fail("Compiler returned null for some reason");
             }
-        } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException | IOException e) {
+        } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
             e.printStackTrace();
             Assertions.fail("Got eception:" + e.getMessage());
         }
