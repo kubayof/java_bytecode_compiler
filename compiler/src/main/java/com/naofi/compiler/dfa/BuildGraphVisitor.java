@@ -9,6 +9,22 @@ public class BuildGraphVisitor  extends NfLangBaseVisitor<Graph.GraphNode> {
     private final GraphBuilder builder = new GraphBuilder();
 
     @Override
+    public Graph.GraphNode visitWhileStmt(NfLangParser.WhileStmtContext ctx) {
+        Label condLabel = new Label();
+        Label startLabel = new Label();
+        Label endLabel = new Label();
+
+        builder.label(condLabel);
+        builder.condJump(ctx.boolExpression(), startLabel, endLabel);
+        builder.label(startLabel);
+        visitBlock(ctx.block());
+        builder.goTo(condLabel);
+        builder.label(endLabel);
+
+        return null;
+    }
+
+    @Override
     public Graph.GraphNode visitIfStmt(NfLangParser.IfStmtContext ctx) {
         Label trueLabel = new Label();
         Label falseLabel = new Label();

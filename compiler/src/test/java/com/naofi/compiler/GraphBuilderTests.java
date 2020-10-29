@@ -67,6 +67,79 @@ public class GraphBuilderTests {
         );
     }
 
+    @Test
+    public void ifElseIfGraph() {
+        graphBuilderTest(
+                "main() {" +
+                        "var a = 0;" +
+                        "int c = -1;" +
+                        "if (a == 0) {" +
+                        "a = 1;" +
+                        "} else if (a < 0) {" +
+                        "a = 2;" +
+                        "}" +
+                        "return a;" +
+                        "}",
+                6, 4,
+                6, 4,
+                0, 1,
+                7, 4,
+                1, 2,
+                6, 7,
+                3, 4,
+                2, 6,
+                4, 5,
+                2, 3
+        );
+    }
+
+    @Test
+    public void ifElseIfElseGraph() {
+        graphBuilderTest(
+                "main() {" +
+                        "var a = 0;" +
+                        "int c = -1;" +
+                        "if (a == 0) {" +
+                        "a = 1;" +
+                        "} else if (a < 0) {" +
+                        "a = 2;" +
+                        "} else {" +
+                        "a = 3;" +
+                        "}" +
+                        "return a;" +
+                        "}",
+                0, 1,
+                7, 4,
+                1, 2,
+                6, 7,
+                8, 4,
+                3, 4,
+                2, 6,
+                6, 8,
+                4, 5,
+                2, 3
+        );
+    }
+
+    @Test
+    public void whileGraph() {
+        graphBuilderTest(
+                "main() {" +
+                        "var a = 0;" +
+                        "while (a < 10) {" +
+                        "a = a + 1;" +
+                        "}" +
+                        "return a;" +
+                        "}",
+                0, 1,
+                1, 2,
+                2, 4,
+                3, 2,
+                4, 5,
+                2, 3
+        );
+    }
+
     private void graphBuilderTest(String code, int... expectedEdgesNodes) {
         if (expectedEdgesNodes.length % 2 != 0) {
             throw new IllegalStateException("Number of numbers representing edges must be even");

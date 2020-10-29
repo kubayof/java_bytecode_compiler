@@ -80,7 +80,8 @@ public class GraphBuilder {
     }
 
     protected void goTo(Label label) {
-        setLabelPointer(label, basicBlock::setNext);
+        setLabelPointer(label, nextConsumer);
+        nextConsumer = a -> {};
     }
 
 

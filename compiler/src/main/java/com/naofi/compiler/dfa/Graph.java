@@ -36,9 +36,18 @@ public class Graph {
         public GraphNode getNext() {
             return next;
         }
+
+        @Override
+        public String toString() {
+            return "Start";
+        }
     }
 
     public static class EndNode implements GraphNode {
+        @Override
+        public String toString() {
+            return "End";
+        }
     }
 
     public static class BasicBlock implements GraphNode {
@@ -67,6 +76,14 @@ public class Graph {
 
         public void setNext(GraphNode next) {
             this.next = next;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder("Basic{\n");
+            statements.forEach(s -> builder.append(s.getText()).append('\n'));
+            builder.append("}");
+            return builder.toString();
         }
     }
 
@@ -97,6 +114,11 @@ public class Graph {
 
         public void setIfFalse(GraphNode ifFalse) {
             this.ifFalse = ifFalse;
+        }
+
+        @Override
+        public String toString() {
+            return "Cond{" + condition.getText() + '}';
         }
     }
 
@@ -159,12 +181,12 @@ public class Graph {
             dotGraphBuilder.append(nodeNumber)
                     .append("[label=\"")
                     .append(node.condition.getText())
-                    .append("\"];");
+                    .append("\", shape=diamond];");
             int trueNodeNumber = visit(node.getIfTrue());
-            dotGraphBuilder.append(nodeNumber).append(" -> ").append(trueNodeNumber).append(";");
+            dotGraphBuilder.append(nodeNumber).append(" -> ").append(trueNodeNumber).append("[label=\"+\"];");
             edges.add(new Pair<>(nodeNumber, trueNodeNumber));
             int falseNodeNumber = visit(node.getIfFalse());
-            dotGraphBuilder.append(nodeNumber).append(" -> ").append(falseNodeNumber).append(";");
+            dotGraphBuilder.append(nodeNumber).append(" -> ").append(falseNodeNumber).append("[label=\"-\"];");
             edges.add(new Pair<>(nodeNumber, falseNodeNumber));
 
             return nodeNumber;
