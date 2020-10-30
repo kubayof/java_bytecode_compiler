@@ -73,6 +73,19 @@ public class DfaTests {
         );
     }
 
+    @Test
+    public void initializeInWhile() {
+        varInitTest("main() {" +
+                        "int a;" +
+                        "while (1 > 2) {" +
+                        "a = 1;" +
+                        "}" +
+                        "return a;" +
+                        "}",
+                "Variable 'a' may be not initialized"
+        );
+    }
+
     private void varInitTest(String code, String... expectedErrors) {
         Binder binder = new Binder();
         ParseTree tree = NfCompiler.parse(code, NfLangParser::method);

@@ -2,6 +2,7 @@ package com.naofi.compiler.dfa;
 
 import com.naofi.compiler.dfa.build.BaseGraphVisitor;
 import com.naofi.compiler.dfa.build.Graph;
+import com.naofi.compiler.dfa.build.IgnoreBackLinksGraphVisitor;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -11,7 +12,7 @@ import java.util.function.Consumer;
 /**
  * Removes empty basic blocks from cfg
  */
-class EliminateEmptyBlocksVisitor extends BaseGraphVisitor<String> implements DfaPipelineEntry {
+class EliminateEmptyBlocksVisitor extends IgnoreBackLinksGraphVisitor<String> implements DfaPipelineEntry {
     private final Deque<Consumer<Graph.GraphNode>> prevSetters = new ArrayDeque<>();
 
     @Override

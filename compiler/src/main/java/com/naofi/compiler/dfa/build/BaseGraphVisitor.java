@@ -15,21 +15,25 @@ public class BaseGraphVisitor<T> {
         }
     }
 
-    public T visitStartNode(Graph.StartNode node) {
+    protected T visitStartNode(Graph.StartNode node) {
         return visit(node.getNext());
     }
 
-    public T visitEndNode(Graph.EndNode node) {
+    protected T visitEndNode(Graph.EndNode node) {
         return null;
     }
 
-    public T visitBasicBlock(Graph.BasicBlock node) {
+    protected T visitBasicBlock(Graph.BasicBlock node) {
         return visit(node.getNext());
     }
 
-    public T visitConditionalJump(Graph.ConditionalJump node) {
+    protected T visitConditionalJump(Graph.ConditionalJump node) {
         visit(node.getIfTrue());
         visit(node.getIfFalse());
+        return defaultReturnValue();
+    }
+
+    protected T defaultReturnValue() {
         return null;
     }
 }

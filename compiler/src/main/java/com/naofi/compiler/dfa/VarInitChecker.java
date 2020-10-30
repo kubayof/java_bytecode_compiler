@@ -5,13 +5,14 @@ import com.naofi.antlr.NfLangParser;
 import com.naofi.compiler.binding.symbols.Variable;
 import com.naofi.compiler.dfa.build.BaseGraphVisitor;
 import com.naofi.compiler.dfa.build.Graph;
+import com.naofi.compiler.dfa.build.IgnoreBackLinksGraphVisitor;
 
 import java.util.*;
 
 /**
  * Check if variable was initialized before usage
  */
-class VarInitChecker extends BaseGraphVisitor<String> implements DfaPipelineEntry {
+class VarInitChecker extends IgnoreBackLinksGraphVisitor<String> implements DfaPipelineEntry {
     private final List<String> errors = new ArrayList<>();
     // Contains variables, deque because of conditional jump
     private final Deque<Map<Variable, Boolean>> varInits = new ArrayDeque<>();
