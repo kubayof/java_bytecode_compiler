@@ -13,6 +13,8 @@ public class  TypedClassContext extends NfLangParser.ClassDefContext {
         super(original.getParent(), original.invokingState);
         name = original.IDENTIFIER().getText();
         members.addAll(original.classMember());
+        original.children.forEach(this::addAnyChild);
+        original.children.forEach(child -> child.setParent(this));
     }
 
     public String getName() {

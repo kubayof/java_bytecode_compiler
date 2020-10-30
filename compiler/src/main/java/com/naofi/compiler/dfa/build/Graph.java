@@ -1,6 +1,5 @@
-package com.naofi.compiler.dfa;
+package com.naofi.compiler.dfa.build;
 
-import com.naofi.antlr.NfLangBaseVisitor;
 import com.naofi.antlr.NfLangParser;
 import org.antlr.v4.runtime.misc.Pair;
 
@@ -8,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.*;
-import java.util.function.Consumer;
 
 /**
  * StartNode
@@ -213,10 +211,14 @@ public class Graph {
     }
 
 
-    private final GraphNode rootNode;
+    private final StartNode startNode;
 
-    private Graph(GraphNode rootNode) {
-        this.rootNode = rootNode;
+    private Graph(StartNode startNode) {
+        this.startNode = startNode;
+    }
+
+    public StartNode getStartNode() {
+        return startNode;
     }
 
     public void dumpToFile(String fileName) {
@@ -229,14 +231,13 @@ public class Graph {
 
     public String dumpToString() {
         DumpGraphVisitor dumper = new DumpGraphVisitor();
-        dumper.visit(rootNode);
+        dumper.visit(startNode);
         return dumper.getText();
     }
 
     public Set<Pair<Integer, Integer>> getEdges() {
         DumpGraphVisitor dumper = new DumpGraphVisitor();
-        dumper.visit(rootNode);
+        dumper.visit(startNode);
         return dumper.getEdges();
     }
-
 }

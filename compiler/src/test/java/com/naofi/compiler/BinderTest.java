@@ -5,14 +5,13 @@ import com.naofi.compiler.binding.Binder;
 import com.naofi.compiler.binding.symbols.VariableType;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class BinderTest {
-    private final Binder binder = new Binder();
-
     @Test
     public void simpleExpression() {
         testMethodBinding(
@@ -139,6 +138,7 @@ public class BinderTest {
     }
 
     @Test
+    @Disabled
     public void uninitializedVariable() {
         testMethodBinding(
                 "main () {" +
@@ -229,6 +229,7 @@ public class BinderTest {
     }
 
     private void testMethodBinding(String code, VariableType expectedType, String... expectedErrors) {
+        Binder binder = new Binder();
         ParseTree tree = NfCompiler.parse(code, NfLangParser::method);
         VariableType actualType = binder.visit(tree);
         Assertions.assertEquals(expectedType, actualType);

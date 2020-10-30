@@ -10,6 +10,8 @@ public class TypedBoolLiteral extends NfLangParser.Bool_termContext {
         super(original.getParent(), original.invokingState);
         this.type = type;
         this.value = value;
+        original.children.forEach(this::addAnyChild);
+        original.children.forEach(child -> child.setParent(this));
     }
 
     public final VariableType getType() {

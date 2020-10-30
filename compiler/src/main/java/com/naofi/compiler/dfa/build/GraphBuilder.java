@@ -1,4 +1,4 @@
-package com.naofi.compiler.dfa;
+package com.naofi.compiler.dfa.build;
 
 import com.naofi.antlr.NfLangParser;
 
@@ -55,13 +55,20 @@ public class GraphBuilder {
      * Add statement to existing block if previous was BasicBlock
      * or create new BasicBlock and add statement to it
      */
-    protected void basic(NfLangParser.StatementContext stmt) {
+    protected void basic() {
         if (basicBlock == null) {
             basicBlock = new Graph.BasicBlock();
             nextConsumer.accept(basicBlock);
             nextConsumer = basicBlock::setNext;
             boundLabels(basicBlock);
         }
+    }
+
+    /**
+     * Creates basic block and bounds labels
+     */
+    protected void basic(NfLangParser.StatementContext stmt) {
+        basic();
         basicBlock.addStatement(stmt);
     }
 

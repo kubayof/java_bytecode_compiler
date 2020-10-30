@@ -1,7 +1,7 @@
-package com.naofi.compiler.dfa;
+package com.naofi.compiler.dfa.build;
 
 public class BaseGraphVisitor<T> {
-    public final T visit(Graph.GraphNode node) {
+    public T visit(Graph.GraphNode node) {
         if (node instanceof Graph.StartNode) {
             return visitStartNode((Graph.StartNode) node);
         } else if (node instanceof Graph.EndNode) {

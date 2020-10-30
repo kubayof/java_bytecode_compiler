@@ -7,20 +7,13 @@ import java.util.Objects;
 public class Variable extends NfLangParser.VariableContext {
     private final String name;
     private final VariableType type;
-    private boolean isInitialized = false;
 
-    Variable(NfLangParser.VariableContext context, VariableType type) {
-        super(context.getParent(), context.invokingState);
-        name = context.IDENTIFIER().getText();
+    Variable(NfLangParser.VariableContext original, VariableType type) {
+        super(original.getParent(), original.invokingState);
+        name = original.IDENTIFIER().getText();
         this.type = type;
-    }
-
-    public boolean isInitialized() {
-        return isInitialized;
-    }
-
-    public void setInitialized(boolean initialized) {
-        isInitialized = initialized;
+        original.children.forEach(this::addAnyChild);
+        original.children.forEach(child -> child.setParent(this));
     }
 
     public final String getName() {

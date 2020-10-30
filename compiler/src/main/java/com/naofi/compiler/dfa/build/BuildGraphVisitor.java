@@ -1,9 +1,9 @@
-package com.naofi.compiler.dfa;
+package com.naofi.compiler.dfa.build;
 
 import com.naofi.antlr.NfLangBaseVisitor;
 import com.naofi.antlr.NfLangParser;
 
-import static com.naofi.compiler.dfa.GraphBuilder.Label;
+import static com.naofi.compiler.dfa.build.GraphBuilder.Label;
 
 public class BuildGraphVisitor  extends NfLangBaseVisitor<Graph.GraphNode> {
     private final GraphBuilder builder = new GraphBuilder();
@@ -32,6 +32,7 @@ public class BuildGraphVisitor  extends NfLangBaseVisitor<Graph.GraphNode> {
 
         builder.condJump(ctx.boolExpression(), trueLabel, falseLabel);
         builder.label(trueLabel);
+        builder.basic();
         visitBlock(ctx.block());
         builder.label(falseLabel);
         if (endLabel != null) {
@@ -53,8 +54,10 @@ public class BuildGraphVisitor  extends NfLangBaseVisitor<Graph.GraphNode> {
 
         builder.condJump(ctx.boolExpression(), trueLabel, falseLabel);
         builder.label(trueLabel);
+        builder.basic();
         visitBlock(ctx.block());
         builder.goTo(endLabel);
+        builder.basic();
         builder.label(falseLabel);
         visit(ctx.elseInner());
 

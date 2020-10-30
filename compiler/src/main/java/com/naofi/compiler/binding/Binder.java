@@ -57,7 +57,6 @@ public class Binder extends NfLangBaseVisitor<VariableType> {
         NfLangParser.VariableContext variableContext = ctx.variable();
         VariableType type = VariableType.of(typeName);
         defineNewVar(variableContext, type);
-        stack.findVar(ctx.variable().IDENTIFIER().getText()).setInitialized(true);
 
         return visitVariable(variableContext);
     }
@@ -130,7 +129,6 @@ public class Binder extends NfLangBaseVisitor<VariableType> {
             errors.add(String.format("Cannot assign type %s to variable of type %s", expressionType, variableType));
         }
         defineNewVar(variableContext, variableType);
-        stack.findVar(ctx.variable().IDENTIFIER().getText()).setInitialized(true);
 
         return visitVariable(variableContext);
     }
@@ -143,7 +141,7 @@ public class Binder extends NfLangBaseVisitor<VariableType> {
         defineNewVar(variableContext, type);
 
         Variable var = stack.findVar(ctx.variable().IDENTIFIER().getText());
-        replace(ctx, var);
+        replace(ctx.variable(), var);
         return type;
     }
 
@@ -153,7 +151,6 @@ public class Binder extends NfLangBaseVisitor<VariableType> {
         NfLangParser.ExprContext expr = ctx.expr();
         VariableType type = visit(expr);
         defineNewVar(variable, type);
-        stack.findVar(ctx.variable().IDENTIFIER().getText()).setInitialized(true);
 
         return visitVariable(variable);
     }
@@ -216,9 +213,6 @@ public class Binder extends NfLangBaseVisitor<VariableType> {
             return VariableType.UNDEFINED;
         }
 
-        if (!var.isInitialized()) {
-            errors.add(String.format("Variable '%s' may be not initialized", ctx.IDENTIFIER().getText()));
-        }
         replace(ctx, var);
         return var.getType();
     }

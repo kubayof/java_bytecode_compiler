@@ -18,6 +18,8 @@ public class TypedMethodContext extends NfLangParser.MethodContext {
         this.formalTypes.addAll(formalTypes);
         this.returnTypes.addAll(returnTypes);
         body = original.block();
+        original.children.forEach(this::addAnyChild);
+        original.children.forEach(child -> child.setParent(this));
     }
 
     public final String getName() {

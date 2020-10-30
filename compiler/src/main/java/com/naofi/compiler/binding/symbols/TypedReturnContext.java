@@ -13,6 +13,8 @@ public class TypedReturnContext extends NfLangParser.ReturnContext {
         super(original);
         this.types.addAll(types);
         exprs.addAll(original.expr());
+        original.children.forEach(this::addAnyChild);
+        original.children.forEach(child -> child.setParent(this));
     }
 
     public List<VariableType> getTypes() {

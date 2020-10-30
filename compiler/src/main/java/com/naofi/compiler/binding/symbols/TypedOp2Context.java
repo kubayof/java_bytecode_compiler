@@ -10,6 +10,8 @@ public class TypedOp2Context extends NfLangParser.Op2Context {
         super(original.getParent(), original.invokingState);
         this.type = type;
         this.operator = original.getText().charAt(0);
+        original.children.forEach(this::addAnyChild);
+        original.children.forEach(child -> child.setParent(this));
     }
 
     public VariableType getType() {
